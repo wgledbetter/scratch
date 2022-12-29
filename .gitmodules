@@ -1,0 +1,9 @@
+[submodule "cpp/dep/implot"]
+	path = cpp/dep/implot
+	url = https://github.com/epezent/implot.git
+[submodule "cpp/dep/imgui"]
+	path = cpp/dep/imgui
+	url = https://github.com/ocornut/imgui.git
+[submodule "cpp/dep/fmt"]
+	path = cpp/dep/fmt
+	url = https://github.com/fmtlib/fmt.git
