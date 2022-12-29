@@ -107,6 +107,7 @@ int main() {
     digs.render();
 
     glfwSwapBuffers(win);
+    glClear(GL_COLOR_BUFFER_BIT);
   }
 
   digs.shutdown();
