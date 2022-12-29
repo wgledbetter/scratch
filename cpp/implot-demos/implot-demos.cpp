@@ -27,8 +27,10 @@ inline double f(double x) {
 
 // Custom ImPlot Function ////////////////////////////////////////////////////////////////////////////////////
 
-inline void myImPlotStuff(ImVector<double>& xVec, ImVector<double>& yVec) {
+inline void myImPlotStuff(double t0, ImVector<double>& xVec, ImVector<double>& yVec) {
   bool boolTrue = true;
+
+  double tNow = ImGui::GetTime();
 
   // Window setup
   ImGui::SetNextWindowPos(ImVec2(50, 50), ImGuiCond_FirstUseEver);
@@ -40,8 +42,8 @@ inline void myImPlotStuff(ImVector<double>& xVec, ImVector<double>& yVec) {
   // Plot Core
   if (ImPlot::BeginPlot("Plotty McPlotface")) {
     ImPlot::SetupAxes("t", "f(t)");
-    ImPlot::SetupAxisLimits(
-        ImAxis_X1, std::max(0.0, xVec.back() - PLOT_HISTORY), xVec.back(), ImGuiCond_Always);
+    ImPlot::SetupAxisLimits(ImAxis_X1, std::max(0.0, tNow - t0 - PLOT_HISTORY), tNow - t0, ImGuiCond_Always);
+    ImPlot::SetupAxisLimits(ImAxis_Y1, -1, 1, ImGuiCond_Always);
     ImPlot::PlotLine("f", xVec.begin(), yVec.begin(), xVec.size());
     ImPlot::EndPlot();
   }
@@ -147,7 +149,7 @@ int main() {
 
   while (!glfwWindowShouldClose(win)) {
     if (dist(rng) > 0.6) {
-      // append
+      // Simulates weirdly-timed data
       x.push_back(ImGui::GetTime() - t0);
       y.push_back(f(x.back()));
     }
@@ -158,7 +160,7 @@ int main() {
 
     // ImPlot stuff
     // ImPlot::ShowDemoWindow();
-    myImPlotStuff(x, y);
+    myImPlotStuff(t0, x, y);
 
     digs.render();
 
