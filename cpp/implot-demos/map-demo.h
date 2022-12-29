@@ -387,7 +387,7 @@ struct MapApp {
 
     ImGui::SetNextWindowPos({0, 0});
     ImGui::SetNextWindowSize(ImGui::GetWindowSize());
-    ImGui::Begin("Map", 0, ImGuiWindowFlags_NoTitleBar);
+    ImGui::Begin("Map", 0, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar);
     if (debug) {
       int wk = mngr.threads_working();
       int dl = mngr.tiles_downloaded();
