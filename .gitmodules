@@ -7,3 +7,9 @@
 [submodule "cpp/dep/fmt"]
 	path = cpp/dep/fmt
 	url = https://github.com/fmtlib/fmt.git
+[submodule "cpp/dep/implot_demos"]
+	path = cpp/dep/implot_demos
+	url = https://github.com/epezent/implot_demos.git
+[submodule "cpp/dep/stb"]
+	path = cpp/dep/stb
+	url = https://github.com/nothings/stb.git

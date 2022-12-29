@@ -11,5 +11,7 @@ target_link_libraries(implot-demos PUBLIC
   glfw
   GLEW::GLEW
   fmt::fmt
+  curl
   ${OPENGL_LIBRARIES}
 )
+target_include_directories(implot-demos PUBLIC ../dep)
