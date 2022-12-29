@@ -5,8 +5,10 @@
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
 
+#include <cmath>
 #include <implot_demo.cpp>
 #include <memory>
+#include <random>
 
 // Constants /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -14,6 +16,38 @@
 #define HEIGHT 720
 
 #define GLVERSION "#version 130"
+
+#define PLOT_HISTORY 10
+
+// Functions to plot /////////////////////////////////////////////////////////////////////////////////////////
+
+inline double f(double x) {
+  return std::sin(x);
+}
+
+// Custom ImPlot Function ////////////////////////////////////////////////////////////////////////////////////
+
+inline void myImPlotStuff(ImVector<double>& xVec, ImVector<double>& yVec) {
+  bool boolTrue = true;
+
+  // Window setup
+  ImGui::SetNextWindowPos(ImVec2(50, 50), ImGuiCond_FirstUseEver);
+  ImGui::SetNextWindowSize(ImVec2(600, 750), ImGuiCond_FirstUseEver);
+  ImGui::Begin("PMP", &boolTrue, ImGuiWindowFlags_MenuBar);
+
+  ImGui::Spacing();
+
+  // Plot Core
+  if (ImPlot::BeginPlot("Plotty McPlotface")) {
+    ImPlot::SetupAxes("t", "f(t)");
+    ImPlot::SetupAxisLimits(
+        ImAxis_X1, std::max(0.0, xVec.back() - PLOT_HISTORY), xVec.back(), ImGuiCond_Always);
+    ImPlot::PlotLine("f", xVec.begin(), yVec.begin(), xVec.size());
+    ImPlot::EndPlot();
+  }
+
+  ImGui::End();
+}
 
 // Class from tutorial video /////////////////////////////////////////////////////////////////////////////////
 
@@ -93,17 +127,39 @@ int main() {
   glfwGetFramebufferSize(win, &width, &height);
   glViewport(0, 0, width, height);
 
+  // Plot data setup =========================================================================================
+
+  std::random_device               rd;
+  std::mt19937                     rng(rd());
+  std::uniform_real_distribution<> dist(-1, 1);
+
+  ImVector<double> x, y;
+  x.push_back(0);
+  y.push_back(0);
+
   // Class setup =============================================================================================
 
   DoImGuiStuff digs(win);
 
   digs.init();
 
+  double t0 = ImGui::GetTime();
+
   while (!glfwWindowShouldClose(win)) {
+    if (dist(rng) > 0.6) {
+      // append
+      x.push_back(ImGui::GetTime() - t0);
+      y.push_back(f(x.back()));
+    }
+
     glfwPollEvents();
 
     digs.update();
-    ImPlot::ShowDemoWindow();
+
+    // ImPlot stuff
+    // ImPlot::ShowDemoWindow();
+    myImPlotStuff(x, y);
+
     digs.render();
 
     glfwSwapBuffers(win);
