@@ -42,7 +42,9 @@ inline void myImPlotStuff(double t0, ImVector<double>& xVec, ImVector<double>& y
   ImGui::Spacing();
 
   // Plot Core
-  if (ImPlot::BeginPlot("Plotty McPlotface")) {
+  if (ImPlot::BeginPlot("Plotty McPlotface", ImVec2(-1, -1))) {
+    // Plot Name, Plot Size (-1 = fit window)
+
     ImPlot::SetupAxes("t", "f(t)");
     ImPlot::SetupAxisLimits(ImAxis_X1, std::max(0.0, tNow - t0 - PLOT_HISTORY), tNow - t0, ImGuiCond_Always);
     ImPlot::SetupAxisLimits(ImAxis_Y1, -1, 1, ImGuiCond_Always);
@@ -108,28 +110,28 @@ struct DoImGuiStuff {
 int main() {
   // Window Setup ============================================================================================
 
-  // if (!glfwInit()) {
-  //   fmt::print("Bad init.\n");
-  //   return 1;
-  // }
+  if (!glfwInit()) {
+    fmt::print("Bad init.\n");
+    return 1;
+  }
 
-  // glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-  // glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
 
-  // GLFWwindow* win = glfwCreateWindow(WIDTH, HEIGHT, "Just show me something plz...", NULL, NULL);
-  // if (win == NULL) {
-  //   fmt::print("Null window.\n");
-  //   return 1;
-  // }
-  // glfwMakeContextCurrent(win);
+  GLFWwindow* win = glfwCreateWindow(WIDTH, HEIGHT, "Just show me something plz...", NULL, NULL);
+  if (win == NULL) {
+    fmt::print("Null window.\n");
+    return 1;
+  }
+  glfwMakeContextCurrent(win);
 
-  // glMatrixMode(GL_MODELVIEW);
-  // glLoadIdentity();
-  // glClearColor(0.0, 0.0, 0.0, 1.0);
+  glMatrixMode(GL_MODELVIEW);
+  glLoadIdentity();
+  glClearColor(0.0, 0.0, 0.0, 1.0);
 
-  // int width, height;
-  // glfwGetFramebufferSize(win, &width, &height);
-  // glViewport(0, 0, width, height);
+  int width, height;
+  glfwGetFramebufferSize(win, &width, &height);
+  glViewport(0, 0, width, height);
 
   // Plot data setup =========================================================================================
 
@@ -143,38 +145,40 @@ int main() {
 
   // Class setup =============================================================================================
 
-  // DoImGuiStuff digs(win);
-  MapApp ma("Maple", WIDTH, HEIGHT);
+  DoImGuiStuff digs(win);
+  // MapApp ma("Maple", WIDTH, HEIGHT);
 
-  // digs.init();
-  ma.init();
+  digs.init();
+  // ma.init();
 
-  // double t0 = ImGui::GetTime();
+  double t0 = ImGui::GetTime();
 
-  while (!glfwWindowShouldClose(ma.win)) {
-    // if (dist(rng) > 0.6) {
-    //   // Simulates weirdly-timed data
-    //   x.push_back(ImGui::GetTime() - t0);
-    //   y.push_back(f(x.back()));
-    // }
+  // while (!glfwWindowShouldClose(ma.win)) {
+  while (!glfwWindowShouldClose(win)) {
+    if (dist(rng) > 0.6) {
+      // Simulates weirdly-timed data
+      x.push_back(ImGui::GetTime() - t0);
+      y.push_back(f(x.back()));
+    }
 
     glfwPollEvents();
 
-    // digs.update();
-    ma.update();
+    digs.update();
+    // ma.update();
 
     // ImPlot stuff
-    // ImPlot::ShowDemoWindow();
-    // myImPlotStuff(t0, x, y);
+    ImPlot::ShowDemoWindow();
+    myImPlotStuff(t0, x, y);
 
-    // digs.render();
-    ma.render();
+    digs.render();
+    // ma.render();
 
-    glfwSwapBuffers(ma.win);
+    // glfwSwapBuffers(ma.win);
+    glfwSwapBuffers(win);
     glClear(GL_COLOR_BUFFER_BIT);
   }
 
-  // digs.shutdown();
+  digs.shutdown();
 
   return 0;
 }
