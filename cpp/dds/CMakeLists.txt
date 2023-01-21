@@ -1,6 +1,6 @@
 # Publisher ====================================================================
 add_executable(dds-pub pub.cpp)
-target_link_libraries(dds-pub PUBLIC fastrtps fastcdr fmt::fmt)
+target_link_libraries(dds-pub PUBLIC fastrtps fastcdr fmt::fmt CLI11)
 
 # Subscriber ===================================================================
 add_executable(dds-sub sub.cpp)
