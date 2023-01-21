@@ -86,11 +86,22 @@ struct Sub {
         reader(nullptr),
         type(new DDSTypes<MessageClass>()) {
     fmt::print("Constructed Sub.\n");
-  };
+  }
 
   // Destructor ==============================================================================================
 
   ~Sub() {
+    if (this->reader != nullptr) {
+      this->subscriber->delete_datareader(this->reader);
+    }
+    if (this->topic != nullptr) {
+      this->participant->delete_topic(this->topic);
+    }
+    if (this->subscriber != nullptr) {
+      this->participant->delete_subscriber(this->subscriber);
+    }
+    DomainParticipantFactory::get_instance()->delete_participant(this->participant);
+
     fmt::print("Destroyed Sub.\n");
   }
 
@@ -106,7 +117,7 @@ struct Sub {
       return false;
     }
 
-    fmt::print("Registering type {} with the participant.\n", this->type.get_type_name());
+    fmt::print("Registering type {} with the Sub participant.\n", this->type.get_type_name());
     this->type.register_type(this->participant);
 
     SubscriberQos subQos = eprosima::fastdds::dds::SUBSCRIBER_QOS_DEFAULT;
@@ -116,7 +127,7 @@ struct Sub {
     }
 
     TopicQos topicQos = eprosima::fastdds::dds::TOPIC_QOS_DEFAULT;
-    this->topic = this->participant->create_topic("MyReallyInterestingTopic", MY_MESSAGE_NAME, topicQos);
+    this->topic       = this->participant->create_topic(MY_TOPIC_NAME, MY_MESSAGE_NAME, topicQos);
     if (this->topic == nullptr) {
       return false;
     }
