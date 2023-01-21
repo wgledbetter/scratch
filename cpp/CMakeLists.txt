@@ -4,3 +4,4 @@ add_subdirectory(dep)
 
 add_subdirectory(implot-demos)
 add_subdirectory(cli)
+add_subdirectory(dds)

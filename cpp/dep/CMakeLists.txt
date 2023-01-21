@@ -1,9 +1,10 @@
 # Easy Stuff -------------------------------------------------------------------
-add_subdirectory(fmt)
-add_subdirectory(CLI11)
-add_subdirectory(magic_enum)
-add_subdirectory(eigen)
-add_subdirectory(argparse)
+add_subdirectory(fmt EXCLUDE_FROM_ALL)
+add_subdirectory(CLI11 EXCLUDE_FROM_ALL)
+add_subdirectory(magic_enum EXCLUDE_FROM_ALL)
+add_subdirectory(eigen EXCLUDE_FROM_ALL)
+add_subdirectory(argparse EXCLUDE_FROM_ALL)
+add_subdirectory(Fast-DDS EXCLUDE_FROM_ALL)
 
 # ImGui Targets ----------------------------------------------------------------
 

@@ -25,3 +25,6 @@
 [submodule "cpp/dep/argparse"]
 	path = cpp/dep/argparse
 	url = git@github.com:p-ranav/argparse.git
+[submodule "cpp/dep/Fast-DDS"]
+	path = cpp/dep/Fast-DDS
+	url = git@github.com:eProsima/Fast-DDS.git
