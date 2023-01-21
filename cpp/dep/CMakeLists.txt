@@ -2,6 +2,7 @@
 add_subdirectory(fmt)
 add_subdirectory(CLI11)
 add_subdirectory(magic_enum)
+add_subdirectory(eigen)
 
 # ImGui Targets ----------------------------------------------------------------
 

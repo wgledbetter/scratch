@@ -19,3 +19,6 @@
 [submodule "cpp/dep/magic_enum"]
 	path = cpp/dep/magic_enum
 	url = git@github.com:Neargye/magic_enum.git
+[submodule "cpp/dep/eigen"]
+	path = cpp/dep/eigen
+	url = git@gitlab.com:libeigen/eigen.git
