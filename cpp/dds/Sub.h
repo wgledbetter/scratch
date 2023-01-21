@@ -136,7 +136,8 @@ struct Sub {
 
   inline void run() {
     while (true) {
-      //
+      // If this loop is empty, it'll get optimized away and break things.
+      std::this_thread::sleep_for(std::chrono::microseconds(1));
     }
   }
 
