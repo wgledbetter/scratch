@@ -22,3 +22,6 @@
 [submodule "cpp/dep/eigen"]
 	path = cpp/dep/eigen
 	url = git@gitlab.com:libeigen/eigen.git
+[submodule "cpp/dep/argparse"]
+	path = cpp/dep/argparse
+	url = git@github.com:p-ranav/argparse.git
