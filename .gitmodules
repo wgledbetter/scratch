@@ -13,3 +13,6 @@
 [submodule "cpp/dep/stb"]
 	path = cpp/dep/stb
 	url = https://github.com/nothings/stb.git
+[submodule "cpp/dep/CLI11"]
+	path = cpp/dep/CLI11
+	url = git@github.com:CLIUtils/CLI11.git
