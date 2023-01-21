@@ -1,6 +1,7 @@
 # Easy Stuff -------------------------------------------------------------------
 add_subdirectory(fmt)
 add_subdirectory(CLI11)
+add_subdirectory(magic_enum)
 
 # ImGui Targets ----------------------------------------------------------------
 
