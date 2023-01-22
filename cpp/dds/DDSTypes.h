@@ -3,6 +3,8 @@
 #include <fastcdr/Cdr.h>
 #include <fastcdr/FastBuffer.h>
 
+#include <string>
+
 #include "settings.h"
 
 template<class MessageClass>
@@ -16,8 +18,8 @@ class DDSTypes : public eprosima::fastdds::dds::TopicDataType {
 
   // Constructor =============================================================================================
 
-  DDSTypes() {
-    this->setName(MY_MESSAGE_NAME);
+  DDSTypes(std::string msgName = MY_MESSAGE_NAME) {
+    this->setName(msgName.c_str());
     auto type_size = MessageClass::getMaxCdrSerializedSize();
     type_size += eprosima::fastcdr::Cdr::alignment(type_size, 4);
     this->m_typeSize = static_cast<uint32_t>(type_size) + 4;

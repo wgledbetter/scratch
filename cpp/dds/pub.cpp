@@ -20,7 +20,7 @@ int main() {
   app.add_option("-n,--number", nMsg, "How many times to send the message.");
 
   int delayMilliseconds = 1000;
-  app.add_option("-d,--delay", delayMilliseconds, "How long to wait between messages.");
+  app.add_option("-d,--delay", delayMilliseconds, "How long to wait between messages (in milliseconds).");
 
   CLI11_PARSE(app);
 
