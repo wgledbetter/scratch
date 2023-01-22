@@ -68,55 +68,70 @@ struct PubListener : public DataWriterListener {
 // Main //////////////////////////////////////////////////////////////////////////////////////////////////////
 
 int main() {
-  const char* TopicName   = "TopicalConversation";
-  const char* MessageName = "DefinitelyNotCoolMessage";
+  const char*   TopicName   = "TopicalConversation";
+  const char*   MessageName = "DefinitelyNotCoolMessage";
+  constexpr int Delay       = 500;
 
   // Common Setup ============================================================================================
   DDSTypes<MySuperCoolMessage> myType(MessageName);
   TypeSupport                  type(&myType);
   TopicQos                     topicQos = TOPIC_QOS_DEFAULT;
+  auto                         factory  = DomainParticipantFactory::get_instance();
 
-  auto factory = DomainParticipantFactory::get_instance();
+  DomainParticipantQos partQos;
+  partQos.wire_protocol().builtin.discovery_config.leaseDuration = eprosima::fastrtps::c_TimeInfinite;
+  partQos.name("CommonParticipantQos");
+
+  SampleInfo sampleInfo;
 
   // Publisher Setup =========================================================================================
-  DomainParticipantQos pubPartQos = PARTICIPANT_QOS_DEFAULT;
-  pubPartQos.name("Pub");
-  DomainParticipant* pubParticipant = factory->create_participant(0, pubPartQos);
+  DomainParticipant* pubParticipant = factory->create_participant(0, partQos);
   type.register_type(pubParticipant);
   PublisherQos  pubQos    = PUBLISHER_QOS_DEFAULT;
   Publisher*    publisher = pubParticipant->create_publisher(pubQos, nullptr);
   Topic*        pubTopic  = pubParticipant->create_topic(TopicName, MessageName, topicQos);
-  DataWriterQos writerQos = DATAWRITER_QOS_DEFAULT;
-  PubListener   pubListener;
-  DataWriter*   writer = publisher->create_datawriter(pubTopic, writerQos, &pubListener);
-
-  // Subscriber Setup ========================================================================================
-  DomainParticipantQos subPartQos = PARTICIPANT_QOS_DEFAULT;
-  subPartQos.name("Sub");
-  DomainParticipant* subParticipant = factory->create_participant(0, subPartQos);
-  type.register_type(subParticipant);
-  SubscriberQos subQos         = SUBSCRIBER_QOS_DEFAULT;
-  Subscriber*   subscriber     = subParticipant->create_subscriber(subQos, nullptr);
-  Topic*        subTopic       = subParticipant->create_topic(TopicName, MessageName, topicQos);
-  DataReaderQos readerQos      = DATAREADER_QOS_DEFAULT;
-  readerQos.reliability().kind = RELIABLE_RELIABILITY_QOS;
-  SubListener<MySuperCoolMessage> subListener;
-  DataReader*                     reader = subscriber->create_datareader(subTopic, readerQos, &subListener);
+  DataWriterQos writerQos;
+  writerQos.history().kind     = KEEP_ALL_HISTORY_QOS;
+  writerQos.reliability().kind = RELIABLE_RELIABILITY_QOS;
+  writerQos.durability().kind  = TRANSIENT_LOCAL_DURABILITY_QOS;
+  PubListener pubListener;
+  DataWriter* writer = publisher->create_datawriter(pubTopic, writerQos);
 
   // Send Message ============================================================================================
   MySuperCoolMessage msg;
   msg.setIndex(69);
   msg.setMessage("Hey there.");
   bool sent = false;
-  while (true) {
-    if (pubListener.firstHasConnected || pubListener.matched > 0) {
-      fmt::print("Got good conditions to send.\n");
-      writer->write(&msg);
-      fmt::print("Sent message.\n");
-      break;
-    }
-    fmt::print("Stalling...\n");
-    std::this_thread::sleep_for(std::chrono::milliseconds(500));
+  // while (true) {
+  // if (pubListener.firstHasConnected || pubListener.matched > 0) {
+  // fmt::print("Got good conditions to send.\n");
+  writer->write(&msg);
+  fmt::print("Sent message.\n");
+  // break;
+  // }
+  fmt::print("Stalling...\n");
+  std::this_thread::sleep_for(std::chrono::milliseconds(Delay));
+  // }
+
+  // Subscriber Setup ========================================================================================
+  DomainParticipant* subParticipant = factory->create_participant(0, partQos);
+  type.register_type(subParticipant);
+  SubscriberQos subQos     = SUBSCRIBER_QOS_DEFAULT;
+  Subscriber*   subscriber = subParticipant->create_subscriber(subQos, nullptr);
+  Topic*        subTopic   = subParticipant->create_topic(TopicName, MessageName, topicQos);
+  DataReaderQos readerQos;
+  readerQos.history().kind     = KEEP_ALL_HISTORY_QOS;
+  readerQos.reliability().kind = RELIABLE_RELIABILITY_QOS;
+  readerQos.durability().kind  = TRANSIENT_LOCAL_DURABILITY_QOS;
+  SubListener<MySuperCoolMessage> subListener;
+  DataReader*                     reader = subscriber->create_datareader(subTopic, readerQos);
+
+  // Read Subscriber's Messages ==============================================================================
+  fmt::print("Stalling...\n");
+  std::this_thread::sleep_for(std::chrono::milliseconds(Delay));
+
+  while (reader->read_next_sample(&msg, &sampleInfo) == ReturnCode_t::RETCODE_OK) {
+    fmt::print("I got this message from the past: {}.\n", msg.toString());
   }
 
   // Cleanup =================================================================================================
