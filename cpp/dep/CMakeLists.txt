@@ -5,6 +5,7 @@ add_subdirectory(magic_enum EXCLUDE_FROM_ALL)
 add_subdirectory(eigen EXCLUDE_FROM_ALL)
 add_subdirectory(argparse EXCLUDE_FROM_ALL)
 add_subdirectory(Fast-DDS EXCLUDE_FROM_ALL)
+add_subdirectory(spdlog EXCLUDE_FROM_ALL)
 
 # ImGui Targets ----------------------------------------------------------------
 

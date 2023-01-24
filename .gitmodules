@@ -28,3 +28,6 @@
 [submodule "cpp/dep/Fast-DDS"]
 	path = cpp/dep/Fast-DDS
 	url = git@github.com:eProsima/Fast-DDS.git
+[submodule "cpp/dep/spdlog"]
+	path = cpp/dep/spdlog
+	url = https://github.com/gabime/spdlog
