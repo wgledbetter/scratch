@@ -1,5 +1,8 @@
 #pragma once
 
+#include <fastdds/rtps/transport/TCPv4TransportDescriptor.h>
+#include <fastdds/rtps/transport/TCPv6TransportDescriptor.h>
+#include <fastrtps/utils/IPLocator.h>
 #include <fmt/format.h>
 
 #include <fastdds/dds/domain/DomainParticipant.hpp>
@@ -10,6 +13,8 @@
 #include <fastdds/dds/subscriber/Subscriber.hpp>
 #include <fastdds/dds/subscriber/qos/DataReaderQos.hpp>
 #include <fastdds/dds/topic/TypeSupport.hpp>
+#include <string>
+#include <vector>
 
 #include "DDSTypes.h"
 #include "settings.h"
@@ -19,16 +24,18 @@ struct Sub {
   using DataReader                = eprosima::fastdds::dds::DataReader;
   using DataReaderQos             = eprosima::fastdds::dds::DataReaderQos;
   using DataReaderListener        = eprosima::fastdds::dds::DataReaderListener;
-  using SampleInfo                = eprosima::fastdds::dds::SampleInfo;
+  using Subscriber                = eprosima::fastdds::dds::Subscriber;
+  using SubscriberQos             = eprosima::fastdds::dds::SubscriberQos;
   using SubscriptionMatchedStatus = eprosima::fastdds::dds::SubscriptionMatchedStatus;
   using DomainParticipant         = eprosima::fastdds::dds::DomainParticipant;
   using DomainParticipantFactory  = eprosima::fastdds::dds::DomainParticipantFactory;
   using DomainParticipantQos      = eprosima::fastdds::dds::DomainParticipantQos;
-  using Subscriber                = eprosima::fastdds::dds::Subscriber;
-  using SubscriberQos             = eprosima::fastdds::dds::SubscriberQos;
+  using SampleInfo                = eprosima::fastdds::dds::SampleInfo;
   using Topic                     = eprosima::fastdds::dds::Topic;
   using TopicQos                  = eprosima::fastdds::dds::TopicQos;
   using TypeSupport               = eprosima::fastdds::dds::TypeSupport;
+  using TCPv4TransportDescriptor  = eprosima::fastdds::rtps::TCPv4TransportDescriptor;
+  using TCPv6TransportDescriptor  = eprosima::fastdds::rtps::TCPv6TransportDescriptor;
 
   // Listener ================================================================================================
 
@@ -105,7 +112,7 @@ struct Sub {
     fmt::print("Destroyed Sub.\n");
   }
 
-  // Init ====================================================================================================
+  // Init Default ============================================================================================
 
   inline bool init() {
     DomainParticipantQos dpQos = eprosima::fastdds::dds::PARTICIPANT_QOS_DEFAULT;
@@ -134,6 +141,68 @@ struct Sub {
 
     DataReaderQos readerQos      = eprosima::fastdds::dds::DATAREADER_QOS_DEFAULT;
     readerQos.reliability().kind = eprosima::fastdds::dds::RELIABLE_RELIABILITY_QOS;
+
+    this->reader = this->subscriber->create_datareader(this->topic, readerQos, &(this->listener));
+    if (this->reader == nullptr) {
+      return false;
+    }
+
+    return true;
+  }
+
+  // Init TCPv4 ==============================================================================================
+
+  inline bool initTCPv4(const std::string&              ip,
+                        unsigned short                  port,
+                        const std::vector<std::string>& whitelist) {
+    eprosima::fastdds::rtps::Locator initialPeerLocator;
+    initialPeerLocator.kind = LOCATOR_KIND_TCPv4;
+    initialPeerLocator.port = port;
+
+    std::shared_ptr<TCPv4TransportDescriptor> descriptor = std::make_shared<TCPv4TransportDescriptor>();
+    for (std::string ip: whitelist) {
+      descriptor->interfaceWhiteList.push_back(ip);
+      fmt::print("Publisher whitelisted IP {}.\n", ip);
+    }
+    if (!ip.empty()) {
+      eprosima::fastrtps::rtps::IPLocator::setIPv4(initialPeerLocator, ip);
+    } else {
+      eprosima::fastrtps::rtps::IPLocator::setIPv4(initialPeerLocator, "127.0.0.1");
+    }
+
+    DomainParticipantQos dpQos;
+    dpQos.wire_protocol().builtin.initialPeersList.push_back(initialPeerLocator);
+    dpQos.wire_protocol().builtin.discovery_config.leaseDuration = eprosima::fastrtps::c_TimeInfinite;
+    dpQos.wire_protocol().builtin.discovery_config.leaseDuration_announcementperiod =
+        eprosima::fastrtps::Duration_t(5, 0);
+    dpQos.name("SubTCPv4");
+    dpQos.transport().use_builtin_transports = false;
+    dpQos.transport().user_transports.push_back(descriptor);
+
+    this->participant = DomainParticipantFactory::get_instance()->create_participant(0, dpQos);
+    if (this->participant == nullptr) {
+      return false;
+    }
+
+    this->type.register_type(this->participant);
+
+    this->subscriber = this->participant->create_subscriber(eprosima::fastdds::dds::SUBSCRIBER_QOS_DEFAULT);
+    if (this->subscriber == nullptr) {
+      return false;
+    }
+
+    TopicQos topicQos = eprosima::fastdds::dds::TOPIC_QOS_DEFAULT;
+    this->topic       = this->participant->create_topic(MY_TOPIC_NAME, MY_MESSAGE_NAME, topicQos);
+    if (this->topic == nullptr) {
+      return false;
+    }
+
+    DataReaderQos readerQos;
+    readerQos.history().kind                      = HISTORY_KIND;
+    readerQos.resource_limits().max_samples       = RESOURCE_MAX_SAMPLES;
+    readerQos.resource_limits().allocated_samples = RESOURCE_ALLOCATED_SAMPLES;
+    readerQos.reliability().kind                  = RELIABILITY_KIND;
+    readerQos.durability().kind                   = DURABILITY_KIND;
 
     this->reader = this->subscriber->create_datareader(this->topic, readerQos, &(this->listener));
     if (this->reader == nullptr) {

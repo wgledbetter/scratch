@@ -1,5 +1,8 @@
 #pragma once
 
+#include <fastdds/rtps/transport/TCPv4TransportDescriptor.h>
+#include <fastdds/rtps/transport/TCPv6TransportDescriptor.h>
+#include <fastrtps/utils/IPLocator.h>
 #include <fmt/format.h>
 
 #include <fastdds/dds/domain/DomainParticipant.hpp>
@@ -10,24 +13,28 @@
 #include <fastdds/dds/publisher/qos/DataWriterQos.hpp>
 #include <fastdds/dds/publisher/qos/PublisherQos.hpp>
 #include <fastdds/dds/topic/TypeSupport.hpp>
+#include <string>
+#include <vector>
 
 #include "DDSTypes.h"
 #include "settings.h"
 
 template<class MessageClass>
 struct Pub {
-  using Topic                    = eprosima::fastdds::dds::Topic;
-  using TopicQos                 = eprosima::fastdds::dds::TopicQos;
+  using DataWriter               = eprosima::fastdds::dds::DataWriter;
+  using DataWriterQos            = eprosima::fastdds::dds::DataWriterQos;
+  using DataWriterListener       = eprosima::fastdds::dds::DataWriterListener;
+  using Publisher                = eprosima::fastdds::dds::Publisher;
+  using PublisherQos             = eprosima::fastdds::dds::PublisherQos;
+  using PublicationMatchedStatus = eprosima::fastdds::dds::PublicationMatchedStatus;
   using DomainParticipant        = eprosima::fastdds::dds::DomainParticipant;
   using DomainParticipantQos     = eprosima::fastdds::dds::DomainParticipantQos;
   using DomainParticipantFactory = eprosima::fastdds::dds::DomainParticipantFactory;
+  using Topic                    = eprosima::fastdds::dds::Topic;
+  using TopicQos                 = eprosima::fastdds::dds::TopicQos;
   using TypeSupport              = eprosima::fastdds::dds::TypeSupport;
-  using DataWriter               = eprosima::fastdds::dds::DataWriter;
-  using DataWriterQos            = eprosima::fastdds::dds::DataWriterQos;
-  using Publisher                = eprosima::fastdds::dds::Publisher;
-  using PublisherQos             = eprosima::fastdds::dds::PublisherQos;
-  using DataWriterListener       = eprosima::fastdds::dds::DataWriterListener;
-  using PublicationMatchedStatus = eprosima::fastdds::dds::PublicationMatchedStatus;
+  using TCPv4TransportDescriptor = eprosima::fastdds::rtps::TCPv4TransportDescriptor;
+  using TCPv6TransportDescriptor = eprosima::fastdds::rtps::TCPv6TransportDescriptor;
 
   // Listener ================================================================================================
 
@@ -80,7 +87,7 @@ struct Pub {
     fmt::print("Destroyed Pub.\n");
   }
 
-  // Init ====================================================================================================
+  // Init Default ============================================================================================
 
   inline bool init() {
     this->msg.setIndex(0);
@@ -113,6 +120,68 @@ struct Pub {
 
     DataWriterQos writerQos = eprosima::fastdds::dds::DATAWRITER_QOS_DEFAULT;
     this->writer            = this->publisher->create_datawriter(this->topic, writerQos, &(this->listener));
+    if (this->writer == nullptr) {
+      return false;
+    }
+
+    return true;
+  }
+
+  // Init TCPv4 ==============================================================================================
+
+  inline bool initTCPv4(const std::string&              ip,
+                        unsigned short                  port,
+                        const std::vector<std::string>& whitelist) {
+    this->msg.setIndex(0);
+    this->msg.setMessage("This message is from Pub::initTCPv4.\n");
+
+    DomainParticipantQos dpQos;
+    dpQos.wire_protocol().builtin.discovery_config.leaseDuration = eprosima::fastrtps::c_TimeInfinite;
+    dpQos.wire_protocol().builtin.discovery_config.leaseDuration_announcementperiod =
+        eprosima::fastrtps::Duration_t(5, 0);
+    dpQos.name("PubTCPv4");
+    dpQos.transport().use_builtin_transports = false;
+
+    std::shared_ptr<TCPv4TransportDescriptor> descriptor = std::make_shared<TCPv4TransportDescriptor>();
+    for (std::string ip: whitelist) {
+      descriptor->interfaceWhiteList.push_back(ip);
+      fmt::print("Publisher whitelisted IP {}.\n", ip);
+    }
+    descriptor->sendBufferSize    = 0;
+    descriptor->receiveBufferSize = 0;
+    if (!ip.empty()) {
+      descriptor->set_WAN_address(ip);
+    }
+    descriptor->add_listener_port(port);
+    dpQos.transport().user_transports.push_back(descriptor);
+
+    this->participant = DomainParticipantFactory::get_instance()->create_participant(0, dpQos);
+    if (this->participant == nullptr) {
+      return false;
+    }
+
+    this->type.register_type(this->participant);
+
+    this->publisher = this->participant->create_publisher(eprosima::fastdds::dds::PUBLISHER_QOS_DEFAULT);
+    if (this->publisher == nullptr) {
+      return false;
+    }
+
+    TopicQos topicQos = eprosima::fastdds::dds::TOPIC_QOS_DEFAULT;
+    this->topic       = this->participant->create_topic(MY_TOPIC_NAME, MY_MESSAGE_NAME, topicQos);
+    if (this->topic == nullptr) {
+      return false;
+    }
+
+    DataWriterQos writerQos;
+    writerQos.history().kind                                      = HISTORY_KIND;
+    writerQos.resource_limits().max_samples                       = RESOURCE_MAX_SAMPLES;
+    writerQos.resource_limits().allocated_samples                 = RESOURCE_ALLOCATED_SAMPLES;
+    writerQos.reliable_writer_qos().times.heartbeatPeriod.seconds = WRITER_HEARTBEAT_SECONDS;
+    writerQos.reliable_writer_qos().times.heartbeatPeriod.nanosec = WRITER_HEARTBEAT_NANOSECONDS;
+    writerQos.reliability().kind                                  = RELIABILITY_KIND;
+
+    this->writer = this->publisher->create_datawriter(this->topic, writerQos, &(this->listener));
     if (this->writer == nullptr) {
       return false;
     }
@@ -162,7 +231,7 @@ struct Pub {
       }
     } else {
       for (int i = 0; i < nMessages; ++i) {
-        pubSuccess = publishFunc(true);
+        pubSuccess = publishFunc(false);
         if (!pubSuccess) {
           fmt::print("Publishing failed, so this message doesn't count. I'll try again.\n");
           --i;
