@@ -25,13 +25,16 @@ int main() {
       ->transform(CLI::CheckedTransformer(modeMap, CLI::ignore_case));
 
   std::string ip = "";
-  app.add_option("--ip", ip, "If network mode, the ip address to use.");
+  app.add_option("--ip", ip, "If network mode, the ip address of the publisher you want to listen to.");
 
   unsigned short port = 5749;
   app.add_option("-p,--port", port, "If network mode, the port to use.");
 
   std::vector<std::string> whitelist = {"127.0.0.1"};
-  app.add_option("-w,--whitelist", whitelist, "If network mode, the ips to whitelist.")->delimiter(',');
+  app.add_option("-w,--whitelist",
+                 whitelist,
+                 "If network mode, the IP addresses of this machine on which to allow DDS.")
+      ->delimiter(',');
 
   CLI11_PARSE(app);
 

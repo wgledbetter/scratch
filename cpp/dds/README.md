@@ -14,3 +14,11 @@ Not that I'd go back and read them, it just helps with retention.
 - [ ] UDPv4 and UDPv6
 - [ ] Dynamic XML example.
 - [ ] Can OpenDDS talk to FastDDS?
+
+
+## Notes
+
+- For the TCP example, the whitelist IP is the IP on the local machine that is allowed to handle traffic.
+- TCP multi-machine settings:
+  - `./dds-pub --mode TCPv4 -p $DDS_PORT -w $MY_IP`
+  - `./dds-sub --mode TCPv4 -p $DDS_PORT -w $MY_IP --ip $THEIR_IP`
