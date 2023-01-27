@@ -162,7 +162,7 @@ struct Sub {
     std::shared_ptr<TCPv4TransportDescriptor> descriptor = std::make_shared<TCPv4TransportDescriptor>();
     for (std::string ip: whitelist) {
       descriptor->interfaceWhiteList.push_back(ip);
-      fmt::print("Publisher whitelisted IP {}.\n", ip);
+      fmt::print("Subscriber whitelisted IP {}.\n", ip);
     }
     if (!ip.empty()) {
       eprosima::fastrtps::rtps::IPLocator::setIPv4(initialPeerLocator, ip);
