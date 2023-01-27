@@ -22,3 +22,4 @@ Not that I'd go back and read them, it just helps with retention.
 - TCP multi-machine settings:
   - `./dds-pub --mode TCPv4 -p $DDS_PORT -w $MY_IP`
   - `./dds-sub --mode TCPv4 -p $DDS_PORT -w $MY_IP --ip $THEIR_IP`
+- Late joiners works over UDP. There is some magic going on here.

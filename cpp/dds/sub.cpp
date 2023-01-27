@@ -30,26 +30,47 @@ int main() {
   unsigned short port = 5749;
   app.add_option("-p,--port", port, "If network mode, the port to use.");
 
-  std::vector<std::string> whitelist = {"127.0.0.1"};
+  std::vector<std::string> whitelist = {"127.0.0.1", "::1"};
   app.add_option("-w,--whitelist",
                  whitelist,
                  "If network mode, the IP addresses of this machine on which to allow DDS.")
       ->delimiter(',');
 
+  int historyLength = 500;
+  app.add_option("--history", historyLength, "The number of recieved messages to hang on to (I think).");
+
   CLI11_PARSE(app);
+
+  // Argument Comprehension ==================================================================================
+  if ((mode == DDSExampleModes::TCPv6 || mode == DDSExampleModes::UDPv6) && whitelist[0] == "127.0.0.1") {
+    whitelist.erase(whitelist.begin());
+  }
 
   // Do DDS Stuff ============================================================================================
   fmt::print("Entered main.\n");
   Sub<MySuperCoolMessage> sub;
   fmt::print("Constructed subscriber.\n");
 
+  bool goodInit = false;
   if (mode == DDSExampleModes::Default) {
-    sub.init();
-    fmt::print("Initialized default subscriber. Running...\n");
-  } else if (mode == DDSExampleModes::TCPv4) {
-    sub.initTCPv4(ip, port, whitelist);
-    fmt::print("Initialized TCPv4 subscriber. Running...\n");
+    fmt::print("Trying to initialize default subscriber.\n");
+    goodInit = sub.init();
+  } else if (mode == DDSExampleModes::TCPv4 || mode == DDSExampleModes::TCPv6
+             || mode == DDSExampleModes::UDPv4 || mode == DDSExampleModes::UDPv6) {
+    fmt::print("Trying to initialize {} subscriber.\n", magic_enum::enum_name(mode));
+    goodInit = sub.initNetwork(mode, ip, port, whitelist, historyLength);
+  } else {
+    fmt::print("BAD MODE.\n");
+    return 1;
   }
 
-  sub.run();
+  if (goodInit) {
+    fmt::print("Good Init! Running...\n");
+    sub.run();
+  } else {
+    fmt::print("BAD INIT\n");
+    return 1;
+  }
+
+  return 0;
 }

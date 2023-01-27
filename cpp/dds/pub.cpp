@@ -39,29 +39,47 @@ int main() {
   unsigned short port = 5749;
   app.add_option("-p,--port", port, "If network mode, the port to use.");
 
-  std::vector<std::string> whitelist = {"127.0.0.1"};
+  std::vector<std::string> whitelist = {"127.0.0.1", "::1"};
   app.add_option("-w,--whitelist",
                  whitelist,
                  "If network mode, the IP addresses of this machine on which to allow DDS.")
       ->delimiter(',');
 
+  int historyLength = 500;
+  app.add_option("--history", historyLength, "The number of messages to keep in history for late joiners.");
+
   CLI11_PARSE(app);
+
+  // Argument Comprehension ==================================================================================
+  if ((mode == DDSExampleModes::TCPv6 || mode == DDSExampleModes::UDPv6) && whitelist[0] == "127.0.0.1") {
+    whitelist.erase(whitelist.begin());
+  }
 
   // Do DDS Stuff ============================================================================================
   fmt::print("Entered main.\n");
   Pub<MySuperCoolMessage> pub;
   fmt::print("Constructed publisher.\n");
 
+  bool goodInit = false;
   if (mode == DDSExampleModes::Default) {
-    pub.init();
-    fmt::print("Initialized default publisher. Running...\n");
-  } else if (mode == DDSExampleModes::TCPv4) {
-    pub.initTCPv4(ip, port, whitelist);
-    fmt::print("Initialized TCPv4 publisher. Running...\n");
+    fmt::print("Trying to initialize default publisher.\n");
+    goodInit = pub.init();
+  } else if (mode == DDSExampleModes::TCPv4 || mode == DDSExampleModes::TCPv6
+             || mode == DDSExampleModes::UDPv4 || mode == DDSExampleModes::UDPv6) {
+    fmt::print("Trying to initialize {} publisher.\n", magic_enum::enum_name(mode));
+    goodInit = pub.initNetwork(mode, ip, port, whitelist, historyLength);
   } else {
     fmt::print("BAD MODE.\n");
     return 1;
   }
 
-  pub.run(nMsg, delayMilliseconds, msg);
+  if (goodInit) {
+    fmt::print("Good Init! Running...\n");
+    pub.run(nMsg, delayMilliseconds, msg);
+  } else {
+    fmt::print("BAD INIT!\n");
+    return 1;
+  }
+
+  return 0;
 }

@@ -2,6 +2,8 @@
 
 #include <fastdds/rtps/transport/TCPv4TransportDescriptor.h>
 #include <fastdds/rtps/transport/TCPv6TransportDescriptor.h>
+#include <fastdds/rtps/transport/UDPv4TransportDescriptor.h>
+#include <fastdds/rtps/transport/UDPv6TransportDescriptor.h>
 #include <fastrtps/utils/IPLocator.h>
 #include <fmt/format.h>
 
@@ -13,6 +15,7 @@
 #include <fastdds/dds/publisher/qos/DataWriterQos.hpp>
 #include <fastdds/dds/publisher/qos/PublisherQos.hpp>
 #include <fastdds/dds/topic/TypeSupport.hpp>
+#include <magic_enum.hpp>
 #include <string>
 #include <vector>
 
@@ -35,6 +38,8 @@ struct Pub {
   using TypeSupport              = eprosima::fastdds::dds::TypeSupport;
   using TCPv4TransportDescriptor = eprosima::fastdds::rtps::TCPv4TransportDescriptor;
   using TCPv6TransportDescriptor = eprosima::fastdds::rtps::TCPv6TransportDescriptor;
+  using UDPv4TransportDescriptor = eprosima::fastdds::rtps::UDPv4TransportDescriptor;
+  using UDPv6TransportDescriptor = eprosima::fastdds::rtps::UDPv6TransportDescriptor;
 
   // Listener ================================================================================================
 
@@ -87,6 +92,32 @@ struct Pub {
     fmt::print("Destroyed Pub.\n");
   }
 
+  // Utility Functions =======================================================================================
+
+  template<class TpDesc>
+  void setupDescriptor(DomainParticipantQos&           dpQos,
+                       const std::string&              ip,
+                       unsigned short                  port,
+                       const std::vector<std::string>& whitelist) const {
+    std::shared_ptr<TpDesc> descriptor = std::make_shared<TpDesc>();
+    for (std::string wlip: whitelist) {
+      descriptor->interfaceWhiteList.push_back(wlip);
+      fmt::print("Publisher is allowed to talk on IP {}.\n", wlip);
+    }
+    descriptor->sendBufferSize    = 0;
+    descriptor->receiveBufferSize = 0;
+    if constexpr (std::is_same<TpDesc, TCPv4TransportDescriptor>::value) {
+      if (!ip.empty()) {
+        descriptor->set_WAN_address(ip);
+      }
+    }
+    if constexpr (std::is_same<TpDesc, TCPv4TransportDescriptor>::value
+                  || std::is_same<TpDesc, TCPv6TransportDescriptor>::value) {
+      descriptor->add_listener_port(port);
+    }
+    dpQos.transport().user_transports.push_back(descriptor);
+  }
+
   // Init Default ============================================================================================
 
   inline bool init() {
@@ -127,33 +158,39 @@ struct Pub {
     return true;
   }
 
-  // Init TCPv4 ==============================================================================================
+  // Init Network ============================================================================================
 
-  inline bool initTCPv4(const std::string&              ip,
-                        unsigned short                  port,
-                        const std::vector<std::string>& whitelist) {
+  inline bool initNetwork(const DDSExampleModes           mode,
+                          const std::string&              ip,
+                          unsigned short                  port,
+                          const std::vector<std::string>& whitelist,
+                          const int                       historyLength) {
+    // Set Default Message -----------------------------------------------------------------------------------
     this->msg.setIndex(0);
-    this->msg.setMessage("This message is from Pub::initTCPv4.\n");
+    this->msg.setMessage("This message is from Pub::initNetwork.\n");
+
+    // Setup DPQoS -------------------------------------------------------------------------------------------
 
     DomainParticipantQos dpQos;
     dpQos.wire_protocol().builtin.discovery_config.leaseDuration = eprosima::fastrtps::c_TimeInfinite;
     dpQos.wire_protocol().builtin.discovery_config.leaseDuration_announcementperiod =
         eprosima::fastrtps::Duration_t(5, 0);
-    dpQos.name("PubTCPv4");
+    dpQos.name(fmt::format("Pub{}", magic_enum::enum_name(mode)));
     dpQos.transport().use_builtin_transports = false;
 
-    std::shared_ptr<TCPv4TransportDescriptor> descriptor = std::make_shared<TCPv4TransportDescriptor>();
-    for (std::string ip: whitelist) {
-      descriptor->interfaceWhiteList.push_back(ip);
-      fmt::print("Publisher whitelisted IP {}.\n", ip);
+    if (mode == DDSExampleModes::TCPv4) {
+      this->setupDescriptor<TCPv4TransportDescriptor>(dpQos, ip, port, whitelist);
+    } else if (mode == DDSExampleModes::TCPv6) {
+      this->setupDescriptor<TCPv6TransportDescriptor>(dpQos, ip, port, whitelist);
+    } else if (mode == DDSExampleModes::UDPv4) {
+      this->setupDescriptor<UDPv4TransportDescriptor>(dpQos, ip, port, whitelist);
+    } else if (mode == DDSExampleModes::UDPv6) {
+      this->setupDescriptor<UDPv6TransportDescriptor>(dpQos, ip, port, whitelist);
+    } else {
+      return false;
     }
-    descriptor->sendBufferSize    = 0;
-    descriptor->receiveBufferSize = 0;
-    if (!ip.empty()) {
-      descriptor->set_WAN_address(ip);
-    }
-    descriptor->add_listener_port(port);
-    dpQos.transport().user_transports.push_back(descriptor);
+
+    // Remaining Common Setup --------------------------------------------------------------------------------
 
     this->participant = DomainParticipantFactory::get_instance()->create_participant(0, dpQos);
     if (this->participant == nullptr) {
@@ -175,8 +212,8 @@ struct Pub {
 
     DataWriterQos writerQos;
     writerQos.history().kind                                      = HISTORY_KIND;
-    writerQos.resource_limits().max_samples                       = RESOURCE_MAX_SAMPLES;
-    writerQos.resource_limits().allocated_samples                 = RESOURCE_ALLOCATED_SAMPLES;
+    writerQos.resource_limits().max_samples                       = historyLength;
+    writerQos.resource_limits().allocated_samples                 = historyLength;
     writerQos.reliable_writer_qos().times.heartbeatPeriod.seconds = WRITER_HEARTBEAT_SECONDS;
     writerQos.reliable_writer_qos().times.heartbeatPeriod.nanosec = WRITER_HEARTBEAT_NANOSECONDS;
     writerQos.reliability().kind                                  = RELIABILITY_KIND;
