@@ -10,6 +10,7 @@
 
 #include "Sub.h"
 #include "SubListeners/AccumulatingSubListener.h"
+#include "common/glfwErrorCallback.h"
 
 // Constants /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -22,6 +23,8 @@ struct SubPlotter : Sub<MessageClass, AccumulatingSubListener> {
   using Base = Sub<MessageClass, AccumulatingSubListener>;
 
   // Constructor =============================================================================================
+
+  SubPlotter(int w, int h) : width(w), height(h) {};
 
   // Accessors ===============================================================================================
 
@@ -52,9 +55,16 @@ struct SubPlotter : Sub<MessageClass, AccumulatingSubListener> {
   // Run =====================================================================================================
 
   inline void run() {
+    glfwSetErrorCallback(printing_callback);
     // ImPlot Setup
     this->setupWindow();
+    if (this->getWindowPtr() == NULL) {
+      fmt::print("Failed to set up window.\n");
+      return;
+    }
+    fmt::print("Set up the window.\n");
     this->initImgui();
+    fmt::print("Initialized ImGui.\n");
 
     // ImPlot Loop
     while (!glfwWindowShouldClose(this->win)) {
@@ -63,10 +73,18 @@ struct SubPlotter : Sub<MessageClass, AccumulatingSubListener> {
 
       // Your stuff goes here
       {
+        bool boolTrue = true;
         if (this->listener.queue.size() > 0) {
           // Get stuff from the listener and plot it.
           this->msg = this->listener.queue.pop();
         }
+        ImGui::SetNextWindowPos(ImVec2(50, 50), ImGuiCond_FirstUseEver);
+        ImGui::SetNextWindowSize(ImVec2(600, 750), ImGuiCond_FirstUseEver);
+        ImGui::Begin("DDS Plot", &boolTrue, ImGuiWindowFlags_MenuBar);
+
+        ImGui::Spacing();
+
+        ImGui::End();
       }
 
       this->renderImgui();
@@ -82,7 +100,7 @@ struct SubPlotter : Sub<MessageClass, AccumulatingSubListener> {
 
   inline void setupWindow() {
     if (!glfwInit()) {
-      fmt::print("Bad GLFW Init.");
+      fmt::print("Bad GLFW Init.\n");
       return;
     }
 
@@ -91,7 +109,7 @@ struct SubPlotter : Sub<MessageClass, AccumulatingSubListener> {
 
     this->win = glfwCreateWindow(this->width, this->height, "DDS Subscriber Plotter", NULL, NULL);
     if (this->win == NULL) {
-      fmt::print("Null window. Bad.");
+      fmt::print("Null window. Bad.\n");
       return;
     }
     glfwMakeContextCurrent(this->win);
