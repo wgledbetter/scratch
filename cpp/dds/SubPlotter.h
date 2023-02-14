@@ -23,8 +23,30 @@ struct SubPlotter : Sub<MessageClass, AccumulatingSubListener> {
 
   // Constructor =============================================================================================
 
-  SubPlotter(int w, int h) : Base(), width(w), height(h) {
-    //
+  // Accessors ===============================================================================================
+
+  inline int getWidth() const {
+    return this->width;
+  }
+
+  inline int getHeight() const {
+    return this->height;
+  }
+
+  inline GLFWwindow* getWindowPtr() const {
+    return this->win;
+  }
+
+  inline void setWidth(int w) {
+    this->width = w;
+  }
+
+  inline void setHeight(int h) {
+    this->height = h;
+  }
+
+  inline void setWindowPtr(GLFWwindow* w) {
+    this->win = w;
   }
 
   // Run =====================================================================================================
