@@ -40,6 +40,12 @@ struct SubPlotter : Sub<MessageClass, AccumulatingSubListener> {
     return this->win;
   }
 
+  inline double getHistory() const {
+    return this->history;
+  }
+
+  // ---------------------------------------------------------------------------------------------------------
+
   inline void setWidth(int w) {
     this->width = w;
   }
@@ -50,6 +56,10 @@ struct SubPlotter : Sub<MessageClass, AccumulatingSubListener> {
 
   inline void setWindowPtr(GLFWwindow* w) {
     this->win = w;
+  }
+
+  inline void setHistory(double h) {
+    this->history = h;
   }
 
   // Run =====================================================================================================
@@ -66,6 +76,8 @@ struct SubPlotter : Sub<MessageClass, AccumulatingSubListener> {
     this->initImgui();
     fmt::print("Initialized ImGui.\n");
 
+    double t0 = ImGui::GetTime();
+
     // ImPlot Loop
     while (!glfwWindowShouldClose(this->win)) {
       glfwPollEvents();
@@ -73,16 +85,27 @@ struct SubPlotter : Sub<MessageClass, AccumulatingSubListener> {
 
       // Your stuff goes here
       {
-        bool boolTrue = true;
-        if (this->listener.queue.size() > 0) {
-          // Get stuff from the listener and plot it.
-          this->msg = this->listener.queue.pop();
-        }
+        bool   boolTrue = true;
+        double tNow     = ImGui::GetTime();
+
+        this->readMessagesToImVectors();
+
         ImGui::SetNextWindowPos(ImVec2(50, 50), ImGuiCond_FirstUseEver);
         ImGui::SetNextWindowSize(ImVec2(600, 750), ImGuiCond_FirstUseEver);
         ImGui::Begin("DDS Plot", &boolTrue, ImGuiWindowFlags_MenuBar);
 
         ImGui::Spacing();
+
+        if (ImPlot::BeginPlot("DDS Message X", ImVec2(-1, -1))) {
+          ImPlot::SetupAxes("t", "x");
+
+          ImPlot::SetupAxisLimits(
+              ImAxis_X1, std::max(0.0, tNow - t0 - this->history), tNow - t0, ImGuiCond_Always);
+
+          ImPlot::PlotLine("x", this->ts.begin(), this->xs.begin(), this->xs.size());
+
+          ImPlot::EndPlot();
+        }
 
         ImGui::End();
       }
@@ -160,10 +183,27 @@ struct SubPlotter : Sub<MessageClass, AccumulatingSubListener> {
     ImGui::DestroyContext();
   }
 
+  // ---------------------------------------------------------------------------------------------------------
+
+  inline void readMessagesToImVectors() {
+    MessageClass msg;
+    while (this->listener.queue.size() > 0) {
+      msg = this->listener.queue.pop();
+
+      this->ts.push_back(msg.getTime());
+      this->xs.push_back(msg.getX());
+      this->ys.push_back(msg.getY());
+      this->zs.push_back(msg.getZ());
+      this->us.push_back(msg.getU());
+      this->vs.push_back(msg.getV());
+      this->ws.push_back(msg.getW());
+    }
+  }
+
   // Member Variables ========================================================================================
-  MessageClass msg;
-  GLFWwindow*  win;
-  int          width, height;
+  GLFWwindow* win;
+  int         width, height;
+  double      history = 20;
 
   ImVector<double> ts, xs, ys, zs, us, vs, ws;
 };
