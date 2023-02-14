@@ -33,6 +33,12 @@ struct ThreadSafeQueue {
     return item;
   }
 
+  // Size ====================================================================================================
+
+  inline int size() const {
+    return this->queue.size();
+  }
+
  private:
   // Member Variables ========================================================================================
   std::queue<Data>        queue;
