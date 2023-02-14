@@ -10,36 +10,12 @@
 #include <vector>
 
 #include "MySuperCoolMessage.h"
+#include "cli.def"
 #include "settings.h"
 
 int main() {
   // Get command line options ================================================================================
-  CLI::App app("DDS Subscriber");
-
-  DDSExampleModes                        mode = DDSExampleModes::Default;
-  std::map<std::string, DDSExampleModes> modeMap;
-  for (auto m: magic_enum::enum_values<DDSExampleModes>()) {
-    modeMap[std::string(magic_enum::enum_name(m))] = m;
-  }
-  app.add_option("--mode", mode, "The transmission mode.")
-      ->transform(CLI::CheckedTransformer(modeMap, CLI::ignore_case));
-
-  std::string ip = "";
-  app.add_option("--ip", ip, "If network mode, the ip address of the publisher you want to listen to.");
-
-  unsigned short port = 5749;
-  app.add_option("-p,--port", port, "If network mode, the port to use.");
-
-  std::vector<std::string> whitelist = {"127.0.0.1", "::1"};
-  app.add_option("-w,--whitelist",
-                 whitelist,
-                 "If network mode, the IP addresses of this machine on which to allow DDS.")
-      ->delimiter(',');
-
-  int historyLength = 500;
-  app.add_option("--history", historyLength, "The number of recieved messages to hang on to (I think).");
-
-  CLI11_PARSE(app);
+  SUB_CLI("DDS Subscriber");
 
   // Argument Comprehension ==================================================================================
   if ((mode == DDSExampleModes::TCPv6 || mode == DDSExampleModes::UDPv6) && whitelist[0] == "127.0.0.1") {
