@@ -29,4 +29,5 @@ target_link_libraries(dds-plot-sub PUBLIC
   implot
   glfw
   GLEW::GLEW
+  ${OPENGL_LIBRARIES}
 )
