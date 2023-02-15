@@ -92,6 +92,7 @@ struct SubPlotter : Sub<MessageClass, AccumulatingSubListener> {
         // fmt::print("GUI Time is {}.\n", tNow);
 
         this->readMessagesToImVectors();
+        this->flushOldData();
 
         ImGui::SetNextWindowPos(ImVec2(50, 50), ImGuiCond_FirstUseEver);
         ImGui::SetNextWindowSize(ImVec2(600, 750), ImGuiCond_FirstUseEver);
@@ -102,12 +103,9 @@ struct SubPlotter : Sub<MessageClass, AccumulatingSubListener> {
         if (ImPlot::BeginPlot("DDS Message X", ImVec2(-1, -1))) {
           ImPlot::SetupAxes("t", "x");
 
-          if (this->ts.size() > 0) {
-            ImPlot::SetupAxisLimits(ImAxis_X1, this->ts[0], this->ts.back(), ImGuiCond_Always);
-          } else {
-            ImPlot::SetupAxisLimits(
-                ImAxis_X1, std::max(0.0, tNow - t0 - this->history), tNow - t0, ImGuiCond_Always);
-          }
+
+          ImPlot::SetupAxisLimits(ImAxis_X1, std::max(0.0, tNow - this->history), tNow, ImGuiCond_Always);
+          ImPlot::SetupAxisLimits(ImAxis_Y1, -1, 1, ImGuiCond_Always);
 
           ImPlot::PlotLine("x", this->ts.begin(), this->xs.begin(), this->xs.size());
 
@@ -208,6 +206,28 @@ struct SubPlotter : Sub<MessageClass, AccumulatingSubListener> {
       this->ws.push_back(msg.getW());
     }
     // fmt::print("Got all messages for this GUI loop.");
+  }
+
+  // ---------------------------------------------------------------------------------------------------------
+
+  inline void flushOldData() {
+    double tNow   = utcTime();
+    int    nStale = 0;
+    for (auto& t: this->ts) {
+      if (t < tNow - this->history) {
+        nStale++;
+      }
+    }
+
+    auto eraseStale = [nStale](ImVector<double>& vec) { vec.erase(vec.begin(), vec.begin() + nStale); };
+
+    eraseStale(this->ts);
+    eraseStale(this->xs);
+    eraseStale(this->ys);
+    eraseStale(this->zs);
+    eraseStale(this->us);
+    eraseStale(this->vs);
+    eraseStale(this->ws);
   }
 
   // Member Variables ========================================================================================
