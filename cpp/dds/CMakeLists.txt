@@ -31,3 +31,8 @@ target_link_libraries(dds-plot-sub PUBLIC
   GLEW::GLEW
   ${OPENGL_LIBRARIES}
 )
+
+# Data Message Publisher =======================================================
+add_executable(dds-data-pub data-pub.cpp)
+target_link_libraries(dds-data-pub PUBLIC fastrtps fastcdr fmt::fmt CLI11 magic_enum::magic_enum)
+target_include_directories(dds-data-pub PUBLIC ${SCRATCH_CPP_DIR})

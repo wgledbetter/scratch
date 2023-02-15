@@ -1,5 +1,3 @@
-#include "Pub.h"
-
 #include <fmt/format.h>
 
 #include <CLI/App.hpp>
@@ -9,19 +7,14 @@
 #include <string>
 #include <vector>
 
-#include "MySuperCoolMessage.h"
+#include "DatafulMessage.h"
+#include "PubData.h"
 #include "cli.def"
 #include "settings.h"
 
 int main() {
   // Get command line options ================================================================================
-  PUB_CLI_SETUP("DDS Publisher");
-
-  std::string msg = "CLI default message";
-  app.add_option("-m,--message", msg, "The message you'd like to send.");
-
-  int nMsg = 5;
-  app.add_option("-n,--number", nMsg, "How many times to send the message. (-1 for infinite)");
+  PUB_CLI_SETUP("DDS Data Publisher");
 
   CLI11_PARSE(app);
 
@@ -31,19 +24,17 @@ int main() {
   }
 
   // Do DDS Stuff ============================================================================================
-  fmt::print("Entered main.\n");
-  Pub<MySuperCoolMessage> pub;
-  fmt::print("Constructed publisher.\n");
+  PubData<DatafulMessage> pub;
 
   std::string ip = "";
 
   bool goodInit = false;
   if (mode == DDSExampleModes::Default) {
-    fmt::print("Trying to initialize default publisher.\n");
+    fmt::print("Trying to initialize default data publisher.\n");
     goodInit = pub.init();
   } else if (mode == DDSExampleModes::TCPv4 || mode == DDSExampleModes::TCPv6
              || mode == DDSExampleModes::UDPv4 || mode == DDSExampleModes::UDPv6) {
-    fmt::print("Trying to initialize {} publisher.\n", magic_enum::enum_name(mode));
+    fmt::print("Trying to initialize {} data publisher.\n");
     goodInit = pub.initNetwork(mode, ip, port, whitelist, historyLength);
   } else {
     fmt::print("BAD MODE.\n");
@@ -52,11 +43,7 @@ int main() {
 
   if (goodInit) {
     fmt::print("Good Init! Running...\n");
-    pub.run(nMsg, delayMilliseconds, msg);
+    pub.run(delayMilliseconds);
   } else {
-    fmt::print("BAD INIT!\n");
-    return 1;
   }
-
-  return 0;
 }

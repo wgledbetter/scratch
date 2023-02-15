@@ -11,6 +11,7 @@
 #include "Sub.h"
 #include "SubListeners/AccumulatingSubListener.h"
 #include "common/glfwErrorCallback.h"
+#include "common/utcTime.h"
 
 // Constants /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -76,7 +77,7 @@ struct SubPlotter : Sub<MessageClass, AccumulatingSubListener> {
     this->initImgui();
     fmt::print("Initialized ImGui.\n");
 
-    double t0 = ImGui::GetTime();
+    double t0 = utcTime();
 
     // ImPlot Loop
     while (!glfwWindowShouldClose(this->win)) {
@@ -86,7 +87,9 @@ struct SubPlotter : Sub<MessageClass, AccumulatingSubListener> {
       // Your stuff goes here
       {
         bool   boolTrue = true;
-        double tNow     = ImGui::GetTime();
+        double tNow     = utcTime();
+
+        // fmt::print("GUI Time is {}.\n", tNow);
 
         this->readMessagesToImVectors();
 
@@ -99,8 +102,12 @@ struct SubPlotter : Sub<MessageClass, AccumulatingSubListener> {
         if (ImPlot::BeginPlot("DDS Message X", ImVec2(-1, -1))) {
           ImPlot::SetupAxes("t", "x");
 
-          ImPlot::SetupAxisLimits(
-              ImAxis_X1, std::max(0.0, tNow - t0 - this->history), tNow - t0, ImGuiCond_Always);
+          if (this->ts.size() > 0) {
+            ImPlot::SetupAxisLimits(ImAxis_X1, this->ts[0], this->ts.back(), ImGuiCond_Always);
+          } else {
+            ImPlot::SetupAxisLimits(
+                ImAxis_X1, std::max(0.0, tNow - t0 - this->history), tNow - t0, ImGuiCond_Always);
+          }
 
           ImPlot::PlotLine("x", this->ts.begin(), this->xs.begin(), this->xs.size());
 
@@ -190,6 +197,8 @@ struct SubPlotter : Sub<MessageClass, AccumulatingSubListener> {
     while (this->listener.queue.size() > 0) {
       msg = this->listener.queue.pop();
 
+      // fmt::print("Got message: {}.\n", msg.toString());
+
       this->ts.push_back(msg.getTime());
       this->xs.push_back(msg.getX());
       this->ys.push_back(msg.getY());
@@ -198,6 +207,7 @@ struct SubPlotter : Sub<MessageClass, AccumulatingSubListener> {
       this->vs.push_back(msg.getV());
       this->ws.push_back(msg.getW());
     }
+    // fmt::print("Got all messages for this GUI loop.");
   }
 
   // Member Variables ========================================================================================

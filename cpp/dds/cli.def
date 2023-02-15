@@ -27,3 +27,29 @@
   CLI11_PARSE(app);
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#define PUB_CLI_SETUP(AppName)                                                                             \
+  CLI::App app(AppName);                                                                                   \
+                                                                                                           \
+  int delayMilliseconds = 1000;                                                                            \
+  app.add_option("-d,--delay", delayMilliseconds, "How long to wait between messages (in milliseconds)."); \
+                                                                                                           \
+  DDSExampleModes                        mode = DDSExampleModes::Default;                                  \
+  std::map<std::string, DDSExampleModes> modeMap;                                                          \
+  for (auto m: magic_enum::enum_values<DDSExampleModes>()) {                                               \
+    modeMap[std::string(magic_enum::enum_name(m))] = m;                                                    \
+  }                                                                                                        \
+  app.add_option("--mode", mode, "The transmission mode.")                                                 \
+      ->transform(CLI::CheckedTransformer(modeMap, CLI::ignore_case));                                     \
+                                                                                                           \
+  unsigned short port = 5749;                                                                              \
+  app.add_option("-p,--port", port, "If network mode, the port to use.");                                  \
+                                                                                                           \
+  std::vector<std::string> whitelist = {"127.0.0.1", "::1"};                                               \
+  app.add_option("-w,--whitelist",                                                                         \
+                 whitelist,                                                                                \
+                 "If network mode, the IP addresses of this machine on which to allow DDS.")               \
+      ->delimiter(',');                                                                                    \
+                                                                                                           \
+  int historyLength = 500;                                                                                 \
+  app.add_option("--history", historyLength, "The number of messages to keep in history for late joiners.");\

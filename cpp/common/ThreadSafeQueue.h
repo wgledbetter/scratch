@@ -1,3 +1,4 @@
+#pragma once
 // https://www.geeksforgeeks.org/implement-thread-safe-queue-in-c/
 
 #include <condition_variable>
@@ -5,7 +6,6 @@
 #include <mutex>
 #include <queue>
 
-#pragma once
 
 template<class Data>
 struct ThreadSafeQueue {

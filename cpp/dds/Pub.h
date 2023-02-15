@@ -20,16 +20,17 @@
 #include <vector>
 
 #include "DDSTypes.h"
+#include "MySuperCoolMessage.h"
+#include "PubListeners/DefaultPubListener.h"
 #include "settings.h"
 
-template<class MessageClass>
+template<class MessageClass, template<class> class Listener = DefaultPubListener>
 struct Pub {
   using DataWriter               = eprosima::fastdds::dds::DataWriter;
   using DataWriterQos            = eprosima::fastdds::dds::DataWriterQos;
   using DataWriterListener       = eprosima::fastdds::dds::DataWriterListener;
   using Publisher                = eprosima::fastdds::dds::Publisher;
   using PublisherQos             = eprosima::fastdds::dds::PublisherQos;
-  using PublicationMatchedStatus = eprosima::fastdds::dds::PublicationMatchedStatus;
   using DomainParticipant        = eprosima::fastdds::dds::DomainParticipant;
   using DomainParticipantQos     = eprosima::fastdds::dds::DomainParticipantQos;
   using DomainParticipantFactory = eprosima::fastdds::dds::DomainParticipantFactory;
@@ -41,40 +42,6 @@ struct Pub {
   using UDPv4TransportDescriptor = eprosima::fastdds::rtps::UDPv4TransportDescriptor;
   using UDPv6TransportDescriptor = eprosima::fastdds::rtps::UDPv6TransportDescriptor;
 
-  // Listener ================================================================================================
-
-  struct Listener : public DataWriterListener {
-    // Constructor -------------------------------------------------------------------------------------------
-    Listener() : matched(0), firstConnected(false) {
-      fmt::print("Constructed Pub::Listener.\n");
-    }
-
-    // Destructor --------------------------------------------------------------------------------------------
-    ~Listener() override {
-      fmt::print("Destroyed Pub::Listener.\n");
-    }
-
-    // on_publication_matched --------------------------------------------------------------------------------
-    inline void on_publication_matched(DataWriter* writer, const PublicationMatchedStatus& info) override {
-      fmt::print("Entering Pub::Listener::on_publication_matched.\n");
-      if (info.current_count_change == 1) {
-        this->matched        = info.total_count;
-        this->firstConnected = true;
-        fmt::print("Publisher matched inside Pub::Listener::on_publication_matched.\n");
-      } else if (info.current_count_change == -1) {
-        this->matched = info.total_count;
-        fmt::print("Publisher un-matched inside Pub::Listener::on_publication_matched.\n");
-      } else {
-        fmt::print("PublicationMatchedStatus::current_count_change value of {} is invalid.\n",
-                   info.current_count_change);
-      }
-    }
-
-    // Member Variables --------------------------------------------------------------------------------------
-    int  matched;
-    bool firstConnected;
-  };
-
   // Constructor =============================================================================================
 
   Pub()
@@ -82,7 +49,8 @@ struct Pub {
         publisher(nullptr),
         topic(nullptr),
         writer(nullptr),
-        type(new DDSTypes<MessageClass>()) {
+        type(new DDSTypes<MessageClass>()),
+        stop(false) {
     fmt::print("Constructed Pub.\n");
   }
 
@@ -121,8 +89,10 @@ struct Pub {
   // Init Default ============================================================================================
 
   inline bool init() {
-    this->msg.setIndex(0);
-    this->msg.setMessage("This message is from Pub::init.\n");
+    if constexpr (std::is_same<MessageClass, MySuperCoolMessage>::value) {
+      this->msg.setIndex(0);
+      this->msg.setMessage("This message is from Pub::init.\n");
+    }
 
     DomainParticipantQos dpQos = eprosima::fastdds::dds::PARTICIPANT_QOS_DEFAULT;
     dpQos.name("Pub");
@@ -166,8 +136,10 @@ struct Pub {
                           const std::vector<std::string>& whitelist,
                           const int                       historyLength) {
     // Set Default Message -----------------------------------------------------------------------------------
-    this->msg.setIndex(0);
-    this->msg.setMessage("This message is from Pub::initNetwork.\n");
+    if constexpr (std::is_same<MessageClass, MySuperCoolMessage>::value) {
+      this->msg.setIndex(0);
+      this->msg.setMessage("This message is from Pub::initNetwork.\n");
+    }
 
     // Setup DPQoS -------------------------------------------------------------------------------------------
 
@@ -255,7 +227,7 @@ struct Pub {
 
     // Execute -----------------------------------------------------------------------------------------------
 
-    if (nMessages == 0) {
+    if (nMessages <= 0) {
       fmt::print("User requested to send 0 messages, but I will send INFINITE messages. HAHAHAHAHA.\n");
       while (!this->stop) {
         pubSuccess = publishFunc(false);
@@ -290,7 +262,7 @@ struct Pub {
 
   bool stop;
 
-  Listener listener;
+  Listener<MessageClass> listener;
 
   MessageClass msg;
 };
