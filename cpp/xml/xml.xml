@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<somethingCustom>
+  <nested a="b" c="d">
+    <plot name="Wow" template="RollRate" />
+    <plot name="Ass">
+      <x value="x" />
+      <y value="y" />
+      <z value="z" />
+    </plot>
+  </nested>
+</somethingCustom>
