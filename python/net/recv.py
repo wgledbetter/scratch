@@ -35,7 +35,7 @@ def main(host: str, port: int, mode: Mode = Mode.TCP4, buf: int = 1024):
         s.bind((ip, port))
         logging.debug("Bound.")
 
-        if mode == Mode.TCP4 or mode == Mode.TCP6:
+        if mode == Mode.TCP4 or mode == Mode.TCP6 or mode == Mode.BLUETOOTH_TCP:
             logging.debug("Trying to listen...")
             s.listen()
             logging.debug("Listening.")
@@ -49,7 +49,7 @@ def main(host: str, port: int, mode: Mode = Mode.TCP4, buf: int = 1024):
                         logging.error("Got no data during recieve.")
                         break
                     logging.info("Recieved data: '{}' from '{}'.".format(data, addr))
-        elif mode == Mode.UDP4 or mode == Mode.UDP6:
+        elif mode == Mode.UDP4 or mode == Mode.UDP6 or mode == Mode.BLUETOOTH_UDP:
             logging.info("Reading UDP...")
             while True:
                 data, addr = s.recvfrom(buf)

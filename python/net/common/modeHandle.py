@@ -37,6 +37,12 @@ def modeHandle(mode: Mode) -> Tuple[Mode, AddressFamily, SocketKind]:
     elif mode == Mode.TCP6:
         aFam = AddressFamily.AF_INET6
         sKind = SocketKind.SOCK_STREAM
+    elif mode == Mode.BLUETOOTH_UDP:
+        aFam = AddressFamily.AF_BLUETOOTH
+        sKind = SocketKind.SOCK_DGRAM
+    elif mode == Mode.BLUETOOTH_TCP:
+        aFam = AddressFamily.AF_BLUETOOTH
+        sKind = SocketKind.SOCK_STREAM
     else:
         raise NotImplementedError()
 
