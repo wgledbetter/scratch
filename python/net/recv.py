@@ -50,7 +50,13 @@ def main(host: str, port: int, mode: Mode = Mode.TCP4, buf: int = 1024):
                         break
                     logging.info("Recieved data: '{}' from '{}'.".format(data, addr))
         elif mode == Mode.UDP4 or mode == Mode.UDP6:
-            raise NotImplementedError()
+            logging.info("Reading UDP...")
+            while True:
+                data, addr = s.recvfrom(buf)
+                if not data:
+                    logging.error("Got no data from UDP.")
+                    break
+                logging.info("Recieved data: '{}' from '{}'.".format(data, addr))
         else:
             raise NotImplementedError()
 
