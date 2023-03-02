@@ -17,14 +17,12 @@ fn main() -> std::io::Result<()> {
     let msg = std::env::args()
       .nth(4)
       .expect("You must give me a message to send.");
-    return Err(Error::new(
-      send(host, port, msg).err().expect("No error?").kind(),
-      "wow",
-    ));
+    let sendSucc = send(host, port, msg).err();
+    match sendSucc {
+      Some(err) => return Err(Error::new(err.kind(), "Failed to send message.")),
+      None => println!("Successfully sent message."),
+    }
   }
 
-  return Err(Error::new(
-    ErrorKind::Unsupported,
-    "You gave me a mode other than send or recv.",
-  ));
+  return Ok(());
 }
