@@ -20,7 +20,7 @@ struct Args {
   #[arg(long, default_value = "Default message.")]
   msg: String,
 
-  #[arg(value_enum, short, long, default_value_t=Mode::TCP4)]
+  #[arg(value_enum, short, long, default_value_t=Mode::TCP)]
   mode: Mode,
 }
 
@@ -40,7 +40,7 @@ pub fn send(
   mode: Mode,
 ) -> std::result::Result<(), SendError> {
   match mode {
-    Mode::TCP4 | Mode::TCP6 => {
+    Mode::TCP => {
       debug!("Trying to connect to {host}:{port}.");
       let stream = TcpStream::connect(format!("{}:{}", host, port));
       match stream {
@@ -54,7 +54,7 @@ pub fn send(
         Err(_) => return Err(SendError::FailedToConnect),
       }
     }
-    Mode::UDP4 | Mode::UDP6 => {
+    Mode::UDP => {
       return Err(SendError::NotImplemented);
     }
   }

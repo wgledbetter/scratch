@@ -17,7 +17,7 @@ struct Args {
   #[arg(short, long)]
   port: u16,
 
-  #[arg(value_enum, short, long, default_value_t=Mode::TCP4)]
+  #[arg(value_enum, short, long, default_value_t=Mode::TCP)]
   mode: Mode,
 }
 
@@ -34,7 +34,7 @@ pub enum RecvError {
 
 pub fn recv(host: String, port: u16, mode: Mode) -> std::result::Result<Vec<u8>, RecvError> {
   match mode {
-    Mode::TCP4 | Mode::TCP6 => {
+    Mode::TCP => {
       debug!("Trying to bind to {host}:{port}.");
       let listener_result = TcpListener::bind(format!("{}:{}", host, port));
       match listener_result {
@@ -57,7 +57,7 @@ pub fn recv(host: String, port: u16, mode: Mode) -> std::result::Result<Vec<u8>,
         Err(_) => return Err(RecvError::FailedToBind),
       }
     }
-    Mode::UDP4 | Mode::UDP6 => {
+    Mode::UDP => {
       return Err(RecvError::NotImplemented);
     }
   }
