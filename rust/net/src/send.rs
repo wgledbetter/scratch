@@ -2,6 +2,7 @@ mod enums;
 
 use crate::enums::Mode;
 use clap::Parser;
+use log::{debug, info};
 use std::io::Write;
 use std::net::TcpStream;
 
@@ -40,6 +41,7 @@ pub fn send(
 ) -> std::result::Result<(), SendError> {
   match mode {
     Mode::TCP4 | Mode::TCP6 => {
+      debug!("Trying to connect to {host}:{port}.");
       let stream = TcpStream::connect(format!("{}:{}", host, port));
       match stream {
         Ok(mut conn) => {
@@ -61,7 +63,11 @@ pub fn send(
 // Main ////////////////////////////////////////////////////////////////////////////////////////////
 
 fn main() -> std::result::Result<(), SendError> {
+  env_logger::init();
+
+  info!("Parsing arguments...");
   let args = Args::parse();
 
+  info!("Calling send...");
   send(args.host, args.port, args.msg, args.mode)
 }
