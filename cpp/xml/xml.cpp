@@ -7,6 +7,7 @@
 #include <string>
 
 #include "pugixml.hpp"
+#include "recursive_find_child_by_attribute.h"
 
 int main() {
   // Get file from command line ==============================================================================
@@ -14,6 +15,12 @@ int main() {
 
   std::string fName = "xml.xml";
   app.add_option("-f,--file", fName, "The xml file to fuck with.");
+
+  std::string attrib = "value";
+  app.add_option("-a,--attrib", attrib, "The attribute you want to find in the document.");
+
+  std::string value = "x";
+  app.add_option("-v,--value", value, "The value of the attribute you want to find.");
 
   CLI11_PARSE(app);
 
@@ -27,6 +34,11 @@ int main() {
   }
 
   pugi::xml_node sc = doc.child("somethingCustom");
-  pugi::xml_node xn = sc.find_child_by_attribute("a", "b");
-  fmt::print("Found: {}\n", xn.name());
+
+  pugi::xml_node vx = recursive_find_child_by_attribute(sc, attrib.c_str(), value.c_str());
+  if (vx.empty()) {
+    fmt::print("Found nothing.\n");
+  } else {
+    fmt::print("Found: {}\n", vx.name());
+  }
 }
