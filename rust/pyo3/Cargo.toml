@@ -1,0 +1,13 @@
+[package]
+name = "pyo3_tests"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+name = "rpy"
+crate-type = ["cdylib"]
+
+[dependencies]
+pyo3 = { version = "0.18.2", features = ["extension-module"] }
