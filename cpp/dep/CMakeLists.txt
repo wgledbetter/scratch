@@ -16,6 +16,7 @@ target_include_directories(imgui PUBLIC imgui)
 
 add_library(imgui_glfw imgui/backends/imgui_impl_glfw.cpp)
 target_include_directories(imgui_glfw PUBLIC imgui imgui/backends)
+target_link_libraries(imgui_glfw PUBLIC glfw)
 
 add_library(imgui_opengl3 imgui/backends/imgui_impl_opengl3.cpp)
 target_include_directories(imgui_opengl3 PUBLIC imgui imgui/backends)
