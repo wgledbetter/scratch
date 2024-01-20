@@ -37,6 +37,3 @@
 [submodule "cpp/dep/glfw"]
 	path = cpp/dep/glfw
 	url = https://github.com/glfw/glfw.git
-[submodule "cpp/dep/glew"]
-	path = cpp/dep/glew
-	url = https://github.com/nigels-com/glew.git

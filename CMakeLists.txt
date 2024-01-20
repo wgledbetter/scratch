@@ -6,4 +6,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 
 set(BUILD_SHARED_LIBS OFF)
 
+set(CMAKE_OBJECT_PATH_MAX 512)
+
 add_subdirectory(cpp)
