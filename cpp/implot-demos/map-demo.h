@@ -1,7 +1,13 @@
 #pragma once
 
+#include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <curl/curl.h>
+#include <fmt/format.h>
+#include <imgui.h>
+#include <imgui_impl_glfw.h>
+#include <imgui_impl_opengl3.h>
+#include <implot.h>
 #include <implot_demos/common/Fonts/IconsFontAwesome5.h>
 
 #include <algorithm>
@@ -27,6 +33,8 @@
 #define MAX_ZOOM    19
 #define MAX_THREADS 2
 #define USER_AGENT  "ImMaps/0.1"
+
+#define PI 3.14
 
 namespace fs = std::filesystem;
 
@@ -438,7 +446,7 @@ struct MapApp {
         renders++;
       }
       ImPlot::PushPlotClipRect();
-      static const char *label      = ICON_FA_COPYRIGHT " OpenStreetMap Contributors";
+      static const char *label      = "OpenStreetMap Contributors";
       auto               label_size = ImGui::CalcTextSize(label);
       auto               label_off  = ImPlot::GetStyle().MousePosPadding;
       ImPlot::GetPlotDrawList()->AddText(

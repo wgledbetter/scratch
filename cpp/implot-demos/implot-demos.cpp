@@ -10,8 +10,6 @@
 #include <memory>
 #include <random>
 
-#include "map-demo.h"
-
 // Constants /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #define WIDTH  1280
@@ -146,14 +144,11 @@ int main() {
   // Class setup =============================================================================================
 
   DoImGuiStuff digs(win);
-  // MapApp ma("Maple", WIDTH, HEIGHT);
 
   digs.init();
-  // ma.init();
 
   double t0 = ImGui::GetTime();
 
-  // while (!glfwWindowShouldClose(ma.win)) {
   while (!glfwWindowShouldClose(win)) {
     if (dist(rng) > 0.6) {
       // Simulates weirdly-timed data
@@ -164,16 +159,13 @@ int main() {
     glfwPollEvents();
 
     digs.update();
-    // ma.update();
 
     // ImPlot stuff
     ImPlot::ShowDemoWindow();
     myImPlotStuff(t0, x, y);
 
     digs.render();
-    // ma.render();
 
-    // glfwSwapBuffers(ma.win);
     glfwSwapBuffers(win);
     glClear(GL_COLOR_BUFFER_BIT);
   }
